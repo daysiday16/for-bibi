@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FOR MY BIBI</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+    body {
+      background-color: #030106;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: 'Segoe UI', Tahoma, 'Kanit', sans-serif;
+    }
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* กล่องหน้าแรกสำหรับกดเปิด */
+    #start-card {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 10;
+      text-align: center;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    /* ปุ่มรูปหัวใจเต้น */
+    .heart-btn {
+      position: relative;
+      width: 80px;
+      height: 72px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      animation: pulse 1.2s infinite ease-in-out;
+      margin-bottom: 20px;
+    }
+    .heart-btn::before, .heart-btn::after {
+      content: "";
+      position: absolute;
+      left: 40px;
+      top: 0;
+      width: 40px;
+      height: 65px;
+      background: linear-gradient(135deg, #ff0844 0%, #ff4e50 100%);
+      border-radius: 40px 40px 0 0;
+      transform: rotate(-45deg);
+      transform-origin: 0 100%;
+      box-shadow: 0 0 20px rgba(255, 8, 68, 0.7);
+    }
+    .heart-btn::after {
+      left: 0;
+      transform: rotate(45deg);
+      transform-origin: 100% 100%;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+    .start-text {
+      color: #ffffff;
+      font-size: 19px;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      text-shadow: 0 0 15px rgba(255, 8, 68, 0.9);
+    }
+
+    /* ปุ่มเปิดซองจดหมาย (ลอยอยู่ด้านล่าง) */
+    #letter-trigger-btn {
+      position: absolute;
+      bottom: 5%;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #ffffff;
+      background: linear-gradient(135deg, #ff0844, #ff4e50);
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(255, 8, 68, 0.8);
+      z-index: 15;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 1s ease, transform 1s ease, box-shadow 0.2s;
+    }
+    #letter-trigger-btn:hover {
+      box-shadow: 0 0 30px rgba(255, 8, 68, 1);
+      transform: translateY(0) scale(1.05);
+    }
+
+    /* หน้าต่างจดหมาย (Modal Popup) */
+    #letter-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    .letter-paper {
+      background: #fffdf9;
+      color: #333333;
+      width: 90%;
+      max-width: 420px;
+      padding: 32px 28px 24px;
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(255, 8, 68, 0.35);
+      border: 2px solid #ffccd5;
+      text-align: center;
+      position: relative;
+      transform: scale(0.85);
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .letter-paper h2 {
+      color: #ff0844;
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+    .letter-paper p {
+      font-size: 16px;
+      line-height: 1.7;
+      color: #4a4a4a;
+      margin-bottom: 22px;
+      text-align: left;
+      text-indent: 20px;
+    }
+    .letter-footer {
+      font-weight: bold;
+      color: #ff0844;
+      text-align: right;
+      font-size: 17px;
+      margin-bottom: 20px;
+    }
+    .close-letter-btn {
+      padding: 10px 26px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #ffffff;
+      background: linear-gradient(135deg, #ff0844, #ff4e50);
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(255, 8, 68, 0.4);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- หน้าแรกรูปหัวใจ -->
+  <div id="start-card">
+    <button class="heart-btn" onclick="startApp()"></button>
+    <div class="start-text">แตะที่หัวใจเพื่อเปิดความในใจของหนู 💖</div>
+  </div>
+
+  <!-- ปุ่มกดอ่านจดหมาย -->
+  <button id="letter-trigger-btn" onclick="openLetter()">
+    💌 มีจดหมายถึงลัลนานะ
+  </button>
+
+  <!-- หน้าต่างจดหมายรัก -->
+  <div id="letter-modal" onclick="closeLetter()">
+    <div class="letter-paper" onclick="event.stopPropagation()">
+      <h2>💌 ถึง ลัลนา บิบี๋ของหนู </h2>
+      <p>
+        Happy anniversary 1 year 8 months นะคะที่รักกก  ꒰ა ♡ ໒꒱ 💖 ไวมากแหะๆ หนูรักพี่ที่สุดในโลก คิดถึงพี่มากมากมากมากเลย อยากให้กอด อยากให้ห๊อมหอม อยากให้จุ๊บ บีบี๋อยู่ดุหนูไปอีกนานนานเลย รักมากมากขอหอมสิบที! หนูตบตีกับตัวเองนั่งทำสิ่งนี้ตอนพี่ไม่ว่างแหละ เหง๊าเหงา อยากวาปมากเลยที่รัก
+      </p>
+      <div class="letter-footer">รักเสมอและตลอดไป ✨</div>
+      <button class="close-letter-btn" onclick="closeLetter()">ปิดจดหมาย 💖</button>
+    </div>
+  </div>
+
+  <audio id="bg-music" src="luvyou.mp3" loop preload="auto"></audio>
+  <canvas id="heartCanvas"></canvas>
+
+  <script>
+    const PHRASES = [
+      "I love you", "ลัลนา", "lanlana", "ลัลนา", "LANLANA",
+      "ลัลนา", "LANLANA", "หนูรักพี่", "เค้ารักบี้",
+      "รักพี่ที่สุด", "ฉันรักคุณ", "luv bibi", "คิดถึงแฟนมาก", "I love more"
+    ];
+
+    // โทนสีนีออนหวาน คม ชัดเจน
+    const COLORS = ["#ff0055", "#ff1a75", "#ff3385", "#ff66a3", "#ffffff", "#ff80bf", "#ff99cc"];
+
+    const canvas = document.getElementById("heartCanvas");
+    const ctx = canvas.getContext("2d");
+    const music = document.getElementById("bg-music");
+    const startCard = document.getElementById("start-card");
+    const letterBtn = document.getElementById("letter-trigger-btn");
+    const letterModal = document.getElementById("letter-modal");
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resize);
+    resize();
+
+    // สมการคณิตศาสตร์รูปหัวใจ
+    function heartPoint(t) {
+      const x = 16 * Math.pow(Math.sin(t), 3);
+      const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+      return { x, y };
+    }
+
+    // สร้างอนุภาคแสงดาววิบวับรอบแบ็กกราวด์
+    const stars = Array.from({ length: 65 }, () => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      size: Math.random() * 2 + 0.8,
+      alpha: Math.random(),
+      speed: 0.015 + Math.random() * 0.02
+    }));
+
+    // สุ่มตำแหน่งคำบอกรัก
+    function generateWords(count) {
+      const list = [];
+      for (let i = 0; i < count; i++) {
+        const t = Math.PI * 2 * Math.random();
+        const base = heartPoint(t);
+        
+        const r = Math.sqrt(Math.random());
+        const spread = 0.25 + 0.75 * r;
+
+        const text = PHRASES[Math.floor(Math.random() * PHRASES.length)];
+        const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+        const size = Math.floor(Math.random() * 12) + 16;
+
+        list.push({
+          text,
+          baseX: base.x * spread,
+          baseY: base.y * spread,
+          size,
+          color,
+          order: Math.random()
+        });
+      }
+      return list.sort((a, b) => a.order - b.order);
+    }
+
+    const totalWords = 280;
+    const words = generateWords(totalWords);
+    let visibleCount = 0;
+    let isRunning = false;
+    let time = 0;
+    let letterShown = false;
+
+    function render() {
+      if (!isRunning) return;
+
+      // เคลียร์พื้นหลังสีม่วงดำลุ่มลึก
+      ctx.fillStyle = "#050109";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // 1. วาดดาวระยิบระยับ
+      stars.forEach(s => {
+        s.alpha += s.speed;
+        if (s.alpha > 1 || s.alpha < 0.2) s.speed = -s.speed;
+        ctx.save();
+        ctx.fillStyle = `rgba(255, 192, 203, ${Math.abs(s.alpha)})`;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      // 2. ปล่อยคำบอกรักออกมาทีละคำอย่างนุ่มนวล
+      if (visibleCount < totalWords) {
+        visibleCount += 1.5;
+      } else if (!letterShown) {
+        // เมื่อหัวใจวาดเสร็จสมบูรณ์ ให้โชว์ปุ่มจดหมายขึ้นมา
+        letterShown = true;
+        showLetterButton();
+      }
+
+      // 3. จังหวะการเต้นของหัวใจแบบสมจริง
+      time += 0.04;
+      const beatCycle = Math.sin(time);
+      const beat = 1 + (beatCycle > 0 ? Math.pow(beatCycle, 4) * 0.05 : 0);
+
+      const scale = (Math.min(canvas.width, canvas.height) / 36) * beat;
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2 - (scale * 1.6);
+
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      const currentTotal = Math.min(Math.floor(visibleCount), totalWords);
+      for (let i = 0; i < currentTotal; i++) {
+        const w = words[i];
+        const posX = centerX + w.baseX * scale;
+        const posY = centerY + w.baseY * scale;
+
+        ctx.font = `bold ${w.size}px 'Segoe UI', Tahoma, sans-serif`;
+
+        // ตัดขอบสีดำเพื่อให้อ่านตัวหนังสือออกชัดเจน 100%
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.75)";
+        ctx.strokeText(w.text, posX, posY);
+
+        // สีตัวอักษร
+        ctx.fillStyle = w.color;
+        ctx.fillText(w.text, posX, posY);
+      }
+
+      requestAnimationFrame(render);
+    }
+
+    function startApp() {
+      startCard.style.opacity = "0";
+      startCard.style.transform = "scale(0.85)";
+      setTimeout(() => startCard.style.display = "none", 500);
+
+      music.play().catch(e => console.log("Audio play error:", e));
+      isRunning = true;
+      render();
+    }
+
+    // ฟังก์ชันจัดการปุ่มและหน้าต่างจดหมาย
+    function showLetterButton() {
+      letterBtn.style.display = "flex";
+      setTimeout(() => {
+        letterBtn.style.opacity = "1";
+        letterBtn.style.transform = "translateY(0)";
+      }, 50);
+    }
+
+    function openLetter() {
+      letterModal.style.display = "flex";
+      setTimeout(() => {
+        letterModal.style.opacity = "1";
+        document.querySelector(".letter-paper").style.transform = "scale(1)";
+      }, 20);
+    }
+
+    function closeLetter() {
+      letterModal.style.opacity = "0";
+      document.querySelector(".letter-paper").style.transform = "scale(0.85)";
+      setTimeout(() => {
+        letterModal.style.display = "none";
+      }, 400);
+    }
+  </script>
+</body>
+</html>
